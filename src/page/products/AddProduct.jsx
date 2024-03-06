@@ -1,16 +1,11 @@
 import { PlusCircleIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useFieldArray, useForm } from "react-hook-form";
 import { PRODUCT_TYPE } from "../../utils/constant";
+import ErrorMessage from "../../components/ErrorMessage";
 // import { addProducts } from "../../store/slice/productSlice";
 
 export default function AddProduct() {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    control,
-    formState: { errors },
-  } = useForm();
+  const { register, handleSubmit, watch, control,formState: { errors }} = useForm();
 
   // Append fields for tags
   const { fields: fieldsProductTags, append: appendProductTags, remove: removeProductTags} = useFieldArray({
@@ -76,9 +71,8 @@ export default function AddProduct() {
                     id="manufacture"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  {errors.manufacture && (
-                    <span className="text-red-600">Manufacture is Required</span>
-                  )}
+                  <ErrorMessage error={errors?.manufacture} message="Manufacture is Required"/>
+
                 </div>
               </div>
 
@@ -97,9 +91,8 @@ export default function AddProduct() {
                     id="productionYear"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  {errors.productionYear && (
-                    <span className="text-red-600">Production year is Required</span>
-                  )}
+                  <ErrorMessage error={errors?.productionYear} message="Production year is Required"/>
+
                 </div>
               </div>
 
@@ -118,9 +111,8 @@ export default function AddProduct() {
                     id="shipmentTimeInDays"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  {errors.shipmentTimeInDays && (
-                    <span className="text-red-600">Shipment time is Required</span>
-                  )}
+                  <ErrorMessage error={errors?.shipmentTimeInDays} message="Shipment time is Required"/>
+
                 </div>
               </div>
 
@@ -139,9 +131,8 @@ export default function AddProduct() {
                     id="processingTimeInDays"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  {errors.processingTimeInDays && (
-                    <span className="text-red-600">Processing time is Required</span>
-                  )}
+                  <ErrorMessage error={errors?.processingTimeInDays} message="Processing time is Required"/>
+
                 </div>
               </div>
 
@@ -160,9 +151,8 @@ export default function AddProduct() {
                     id="shippingPrice"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  {errors.shippingPrice && (
-                    <span className="text-red-600">Shipping price is Required</span>
-                  )}
+                  <ErrorMessage error={errors?.shippingPrice} message="Shipping price is Required"/>
+
                 </div>
               </div>
 
@@ -191,9 +181,8 @@ export default function AddProduct() {
                       </label>
                     </div>
                   ))}
-                  {errors.type && (
-                    <span className="text-red-600">Type is Required</span>
-                  )}
+                  <ErrorMessage error={errors?.type} message="Type is Required"/>
+
                 </div>
               </div>
               <div className=" flex gap-5 items-center">
@@ -228,13 +217,11 @@ export default function AddProduct() {
                       id="customizableComment"
                       className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
-                    {errors.customizableComment && (
-                      <span className="text-red-600">Customizable Comment is Required</span>
-                    )}
+                    <ErrorMessage error={errors?.customizableComment} message="Customizable Comment is Required"/>
+
                   </div>
                 </div>
               )}
-          
             </div>
             
             {/* Tags and variant section */}

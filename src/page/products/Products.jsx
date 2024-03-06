@@ -5,6 +5,7 @@ import { fetchProducts } from "../../store/slice/productSlice";
 import ProductCard from "../../components/ProductCard";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination";
+import Loader from "../../components/Loader";
 
 
 export default function Products() {
@@ -37,9 +38,9 @@ export default function Products() {
   return (
     <div className="bg-white">
       {isLoading ? (
-        "Loading..."
+        <Loader/>
       ) : (
-        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-7xl lg:px-8">
+        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-7xl lg:px-8" style={{height: "auto", minHeight: 'calc(100vh - 210px)'}}>
           <div className="flex justify-between">
             <h2 className="text-2xl font-bold tracking-tight text-gray-900">
               Product list
