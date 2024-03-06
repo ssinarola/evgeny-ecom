@@ -8,7 +8,7 @@ import Pagination from "../../components/Pagination";
 
 
 export default function Products() {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [perPageList, setPerPageList] = useState(10);
   const dispatch = useDispatch();
   const navigate = useNavigate();

@@ -5,7 +5,7 @@ function ProductCard({ product }) {
         <h3 className="text-2xl font-bold tracking-tight text-gray-900">
           {product.maker}
         </h3>
-        <div class="grid grid-rows-3 grid-flow-col gap-1">
+        <div className="grid grid-rows-3 grid-flow-col gap-1">
           <div className="font-medium flex gap-1">
             <p className="text-gray-900">Category :</p>{" "}
             <span className="text-gray-500">{product?.categoryId}</span>
