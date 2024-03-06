@@ -1,6 +1,6 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
-export default function Pagination({ perPageList = 10, listLength = 0, currentPage, handlePaginate, setCurrentPage }) {
+export default function Pagination({ perPageList = 10, listLength = 0, currentPage, setCurrentPage }) {
   const pageNumbers = [];
 
   for (let i = 1; i <= Math.ceil(listLength / perPageList); i++) {
@@ -18,6 +18,7 @@ export default function Pagination({ perPageList = 10, listLength = 0, currentPa
         </button>
         <button
           onClick={() => setCurrentPage((prev) => prev + 1)}
+          disabled={currentPage === listLength}
           className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           Next
@@ -38,13 +39,14 @@ export default function Pagination({ perPageList = 10, listLength = 0, currentPa
           >
             <button
              onClick={() => setCurrentPage((prev) => prev - 1)}
-              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+             disabled={currentPage === 1}
+             className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
             >
               <span className="sr-only">Previous</span>
               <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
             </button>
             {pageNumbers.map((page) => (
-              <button
+              <button key={page}
                 onClick={() => setCurrentPage(page)}
                 className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${currentPage === page ? "bg-gray-800 text-white" :""}`}
               >
@@ -53,6 +55,7 @@ export default function Pagination({ perPageList = 10, listLength = 0, currentPa
             ))}
             <button
               onClick={() => setCurrentPage((prev) => prev + 1)}
+              disabled={currentPage === pageNumbers?.length}
               className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
             >
               <span className="sr-only">Next</span>
