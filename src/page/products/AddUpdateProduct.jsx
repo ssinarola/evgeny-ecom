@@ -1,11 +1,74 @@
 import { PlusCircleIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { useLocation, useParams } from "react-router-dom";
 import { useFieldArray, useForm } from "react-hook-form";
 import { PRODUCT_TYPE } from "../../utils/constant";
 import ErrorMessage from "../../components/ErrorMessage";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { updateProduct } from "../../services/products";
 // import { addProducts } from "../../store/slice/productSlice";
 
 export default function AddProduct() {
-  const { register, handleSubmit, watch, control,formState: { errors }} = useForm();
+  const { pathname } = useLocation();
+  const { productId } = useParams();
+  const [selectedProductDetail, setSelectedProductDetail] = useState({});
+  
+  
+  const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
+
+  const getProductById = useCallback(async () => {
+    // const productDetail = await updateProduct({ productId });
+    // setSelectedProductDetail(productDetail?.data);
+    setSelectedProductDetail({
+      storeId: "0f3e43ce-0a1b-4a15-a85d-aad6b5fc780f",
+      categoryId: "Photography and Prints",
+      maker: "Maker Name",
+      productionYear: "2000",
+      type: "DIGITAL",
+      customizable: true,
+      customizableComment: "Additional comments",
+      shipmentTimeInDays: "1-3",
+      processingTimeInDays: "5-7",
+      shippingPrice: 10.99,
+      productTags: ["fkf", "ddf", "fsdds", "dfsddsf"],
+    });
+    appendProductTags(["fkf", "ddf", "fsdds", "dfsddsf"]);
+    appendVariants([{
+      title: "variantss",
+      description: "name of variants",
+      domesticPrice: 12.99,
+      globalPrice: 10,
+      sku: "sku",
+      quantity: "5",
+      attributes: [],
+    },{
+      title: "variantss",
+      description: "name of variants",
+      domesticPrice: 12.99,
+      globalPrice: 10,
+      sku: "sku",
+      quantity: "5",
+      attributes: [],
+    }]);
+  }, [productId]);
+
+  useEffect(() => {
+    // if(isEditProduct){
+    //   // Get product API call and set form value with product detail
+    //   getProductById();
+    // }else{
+    //   setSelectedProductDetail({})
+    // }
+  },[isEditProduct])
+
+  
+  const { register, handleSubmit, watch, control,formState: { errors }} = useForm({ defaultValues: 
+    selectedProductDetail
+});
+
+
+  console.info('selectedProductDetail =>',selectedProductDetail)
+  console.info('watch() =>', watch('productTags'))
+
 
   // Append fields for tags
   const { fields: fieldsProductTags, append: appendProductTags, remove: removeProductTags} = useFieldArray({
@@ -28,7 +91,7 @@ export default function AddProduct() {
   return (
     <div className="bg-white mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-7xl lg:px-8">
       <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-        Add Product
+        {isEditProduct ? 'Update' : 'Add'} Product
       </h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-12">
@@ -126,6 +189,7 @@ export default function AddProduct() {
                 <div className="mt-2">
                   <input
                     {...register("processingTimeInDays", { required: true })}
+                    // defaultValue={processingTimeInDays}
                     type="number"
                     name="processingTimeInDays"
                     id="processingTimeInDays"
@@ -242,6 +306,7 @@ export default function AddProduct() {
                   {fieldsProductTags.map((item, index) => (
                     <li key={item.id}>
                       <input
+                        // defaultValue={item}
                         {...register(`productTags[${index}]`)}
                         className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                       />
