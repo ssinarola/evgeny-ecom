@@ -1,18 +1,20 @@
-import { PlusCircleIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PlusCircleIcon, TrashIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { useLocation, useParams } from "react-router-dom";
 import { useFieldArray, useForm } from "react-hook-form";
 import { PRODUCT_TYPE } from "../../utils/constant";
 import ErrorMessage from "../../components/ErrorMessage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { updateProduct } from "../../services/products";
+import VariantCreateSection from "../../components/VariantCreateSection";
 // import { addProducts } from "../../store/slice/productSlice";
 
 export default function AddProduct() {
   const { pathname } = useLocation();
   const { productId } = useParams();
   const [selectedProductDetail, setSelectedProductDetail] = useState({});
-  
-  
+  const [attributeTypes, setAttributeTypes] = useState([]);
+  const [attributes, setAttributes] = useState([]);
+
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
 
   const getProductById = useCallback(async () => {
@@ -58,17 +60,11 @@ export default function AddProduct() {
     // }else{
     //   setSelectedProductDetail({})
     // }
-  },[isEditProduct])
-
+  },[isEditProduct]);
   
-  const { register, handleSubmit, watch, control,formState: { errors }} = useForm({ defaultValues: 
-    selectedProductDetail
-});
+  const { register, handleSubmit, watch, control, formState: { errors }, setValue} = useForm({ defaultValues: selectedProductDetail });
 
-
-  console.info('selectedProductDetail =>',selectedProductDetail)
-  console.info('watch() =>', watch('productTags'))
-
+  console.info('watch =>', watch({}))
 
   // Append fields for tags
   const { fields: fieldsProductTags, append: appendProductTags, remove: removeProductTags} = useFieldArray({
@@ -80,6 +76,12 @@ export default function AddProduct() {
   const { fields: fieldsVariants, append: appendVariants,remove: removeVariants} = useFieldArray({
     control,
     name: "variants",
+  });
+
+  // Append fields for attributes
+  const { fields: fieldsAttributes, append: appendAttributes, remove: removeAttributes} = useFieldArray({
+    control,
+    name: "attributes",
   });
 
   const onSubmit = (data) => {
@@ -288,7 +290,7 @@ export default function AddProduct() {
               )}
             </div>
             
-            {/* Tags and variant section */}
+            {/* Tags section start */}
             <div className="my-4">
                 <div className="flex gap-1">
                   <label
@@ -302,94 +304,43 @@ export default function AddProduct() {
                     onClick={() => appendProductTags(" ")}
                   />
                 </div>
-                <ul className="grid grid-cols-5 gap-x-0">
+                <ul className="grid grid-cols-5 gap-4 mt-1">
                   {fieldsProductTags.map((item, index) => (
-                    <li key={item.id}>
+                    <li key={item.id} className="relative">
                       <input
-                        // defaultValue={item}
                         {...register(`productTags[${index}]`)}
-                        className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                       />
                       <button
                         type="button"
                         onClick={() => removeProductTags(index)}
+                        className="-translate-y-1/2 absolute right-0 translate-x-1/2 top-0"
                       >
-                        <TrashIcon className="h-5 w-6 text-red-600" />
+                        {/* <TrashIcon className="h-5 w-6 text-red-600" /> */}
+                        <XCircleIcon className="h-6 w-6 text-red-600"/>
                       </button>
                     </li>
                   ))}
                 </ul>
-              </div>
-
-              <div className="">
-                <div className="flex gap-1">
-                  <label
-                    htmlFor="last-name"
-                    className="block text-sm font-medium leading-6 text-gray-900 flex"
-                  >
-                    Variants
-                  </label>
-                  <PlusCircleIcon
-                    className="h-6 w-6"
-                    onClick={() =>
-                      appendVariants({
-                        title: "",
-                        description: "",
-                        globalPrice: "",
-                        domesticPrice: "",
-                        quantity: "",
-                        sku: "",
-                        attributes: [],
-                      })
-                    }
-                  />
-                </div>
-                <ul>
-                  {fieldsVariants.map((item, variantIndex) => (
-                    <li key={item.id}>
-                      <input
-                        placeholder="Enter Variant Title"
-                        {...register(`variants.${variantIndex}.title`)}
-                        className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      />
-                      <input
-                        placeholder="Enter Variant Description"
-                        {...register(`variants.${variantIndex}.description`)}
-                        className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      />
-                      <input
-                        placeholder="Enter Variant GlobalPrice"
-                        type="number"
-                        {...register(`variants.${variantIndex}.globalPrice`)}
-                        className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      />
-                      <input
-                        placeholder="Enter Variant domesticPrice"
-                        type="number"
-                        {...register(`variants.${variantIndex}.domesticPrice`)}
-                        className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      />
-                      <input
-                        placeholder="Enter Variant Quantity"
-                        type="number"
-                        {...register(`variants.${variantIndex}.quantity`)}
-                        className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      />
-                      <input
-                        placeholder="Enter Variant SKU"
-                        {...register(`variants.${variantIndex}.sku`)}
-                        className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeVariants(variantIndex)}
-                      >
-                        <TrashIcon className="h-5 w-6 text-red-600" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            </div>
+              {/* Tags section end */}
+              
+              {/* Variants section start */}
+              <VariantCreateSection 
+               appendVariants={appendVariants}
+               fieldsVariants={fieldsVariants}
+               appendAttributes={appendAttributes}
+               removeVariants={removeVariants}
+               register={register}
+               setAttributes={setAttributes}
+               attributes={attributes}
+               setAttributeTypes={setAttributeTypes}
+               attributeTypes={attributeTypes}
+               fieldsAttributes={fieldsAttributes}
+               removeAttributes={removeAttributes}
+               setValue={setValue}
+               watch={watch}
+              />
           </div>
         </div>
 
