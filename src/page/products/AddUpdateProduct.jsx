@@ -5,7 +5,7 @@ import { PRODUCT_TYPE } from "../../utils/constant";
 import ErrorMessage from "../../components/ErrorMessage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { updateProduct } from "../../services/products";
-import VariantCreateSection from "../../components/VariantCreateSection";
+import Variants from "../../components/Products/Variants";
 // import { addProducts } from "../../store/slice/productSlice";
 
 export default function AddProduct() {
@@ -42,7 +42,9 @@ export default function AddProduct() {
       sku: "sku",
       quantity: "5",
       attributes: [],
-    },{
+      attributesTypeAndValue: [],
+      selectedAttributes:[]
+    }, {
       title: "variantss",
       description: "name of variants",
       domesticPrice: 12.99,
@@ -50,6 +52,8 @@ export default function AddProduct() {
       sku: "sku",
       quantity: "5",
       attributes: [],
+      attributesTypeAndValue: [],
+      selectedAttributes:[]
     }]);
   }, [productId]);
 
@@ -63,8 +67,6 @@ export default function AddProduct() {
   },[isEditProduct]);
   
   const { register, handleSubmit, watch, control, formState: { errors }, setValue} = useForm({ defaultValues: selectedProductDetail });
-
-  console.info('watch =>', watch({}))
 
   // Append fields for tags
   const { fields: fieldsProductTags, append: appendProductTags, remove: removeProductTags} = useFieldArray({
@@ -248,7 +250,6 @@ export default function AddProduct() {
                     </div>
                   ))}
                   <ErrorMessage error={errors?.type} message="Type is Required"/>
-
                 </div>
               </div>
               <div className=" flex gap-5 items-center">
@@ -284,7 +285,6 @@ export default function AddProduct() {
                       className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
                     <ErrorMessage error={errors?.customizableComment} message="Customizable Comment is Required"/>
-
                   </div>
                 </div>
               )}
@@ -300,7 +300,7 @@ export default function AddProduct() {
                     Tags
                   </label>
                   <PlusCircleIcon
-                    className="h-6 w-6"
+                    className="h-6 w-6 cursor-pointer"
                     onClick={() => appendProductTags(" ")}
                   />
                 </div>
@@ -326,7 +326,7 @@ export default function AddProduct() {
               {/* Tags section end */}
               
               {/* Variants section start */}
-              <VariantCreateSection 
+              <Variants 
                appendVariants={appendVariants}
                fieldsVariants={fieldsVariants}
                appendAttributes={appendAttributes}
@@ -340,6 +340,7 @@ export default function AddProduct() {
                removeAttributes={removeAttributes}
                setValue={setValue}
                watch={watch}
+               control={control}
               />
           </div>
         </div>
