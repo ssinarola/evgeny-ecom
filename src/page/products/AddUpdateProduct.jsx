@@ -13,7 +13,6 @@ export default function AddProduct() {
   const { productId } = useParams();
   const [selectedProductDetail, setSelectedProductDetail] = useState({});
   const [attributeTypes, setAttributeTypes] = useState([]);
-  const [attributes, setAttributes] = useState([]);
 
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
 
@@ -32,6 +31,17 @@ export default function AddProduct() {
       processingTimeInDays: "5-7",
       shippingPrice: 10.99,
       productTags: ["fkf", "ddf", "fsdds", "dfsddsf"],
+      variants:[
+        {
+          title: "",
+          description: "",
+          domesticPrice: 0,
+          globalPrice: 0,
+          sku: "",
+          quantity: 0,
+          attributes: []
+        }
+      ]
     });
     appendProductTags(["fkf", "ddf", "fsdds", "dfsddsf"]);
     appendVariants([{
@@ -332,8 +342,6 @@ export default function AddProduct() {
                appendAttributes={appendAttributes}
                removeVariants={removeVariants}
                register={register}
-               setAttributes={setAttributes}
-               attributes={attributes}
                setAttributeTypes={setAttributeTypes}
                attributeTypes={attributeTypes}
                fieldsAttributes={fieldsAttributes}
