@@ -6,6 +6,8 @@ import ErrorMessage from "../../components/ErrorMessage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { updateProduct } from "../../services/products";
 import Variants from "../../components/Products/Variants";
+import { addProducts } from "../../store/slice/productSlice";
+import { useDispatch } from "react-redux";
 // import { addProducts } from "../../store/slice/productSlice";
 
 export default function AddProduct() {
@@ -13,6 +15,7 @@ export default function AddProduct() {
   const { productId } = useParams();
   const [selectedProductDetail, setSelectedProductDetail] = useState({});
   const [attributeTypes, setAttributeTypes] = useState([]);
+  const dispatch = useDispatch();
 
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
 
@@ -91,15 +94,42 @@ export default function AddProduct() {
   });
 
   // Append fields for attributes
-  const { fields: fieldsAttributes, append: appendAttributes, remove: removeAttributes} = useFieldArray({
-    control,
-    name: "attributes",
-  });
-
-  const onSubmit = (data) => {
+  // const { fields: fieldsAttributes, append: appendAttributes, remove: removeAttributes} = useFieldArray({
+  //   control,
+  //   name: "attributes",
+  // });
+  
+  const onSubmit = async (data) => {
     console.info("onSubmit data =>", data);
+    const { attributes, variants, ...productDetail } = Object.assign({}, data);
+
+    const variantsAndAttributesDetails = variants.map(variant => {
+        const { selectedAttributeTypeAndValue, attributesTypeAndValue, ...variantDetails } = Object.assign({}, variant);
+        return variantDetails;
+    })
+    
+    const staticKeys = {  
+      "listingImages": ["5674788612","56747886154"],
+      "storeId": "0f3e43ce-0a1b-4a15-a85d-aad6b5fc780f",
+      "thumbnail": "456456zmcjbbhs",
+      "video": "546546fdfdfdb",
+      "returnExchangePolicyId": "Return and Exchange Policy",
+    }
     // API call for product creation
-    // dispatch(addProducts(data));
+    dispatch(addProducts({...staticKeys, ...productDetail, variants : variantsAndAttributesDetails}));
+
+    //  const response = await 
+    //  axios({
+    //   method: 'POST',
+    //   url: `http://192.168.100.17:8086/api${PRODUCTS_API_URL}`,
+    //   data: {...staticKeys, ...productDetail, variants : variantsAndAttributesDetails},
+    //   headers: {
+    //     'content-type': 'application/json',
+    //     'Access-Control-Allow-Methods': 'POST',
+    // }
+    // })
+    //  axios.post(`http://192.168.100.17:8086/api${PRODUCTS_API_URL}`, {...staticKeys, ...productDetail, variants : variantsAndAttributesDetails})
+    //  console.info('response =>', response)
   };
 
   return (
@@ -120,19 +150,18 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <select
-                    {...register("category")}
-                    id="category"
-                    name="category"
+                    {...register("categoryId")}
+                    id="categoryId"
+                    name="categoryId"
                     autoComplete="category-name"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
                   >
-                    <option>Category 1</option>
-                    <option>Category 2</option>
-                    <option>Category 3</option>
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
                   </select>
                 </div>
               </div>
-
               <div className="">
                 <label
                   htmlFor="last-name"
@@ -142,14 +171,13 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <input
-                    {...register("manufacture", { required: true })}
+                    {...register("maker", { required: true })}
                     type="text"
-                    name="manufacture"
-                    id="manufacture"
+                    name="maker"
+                    id="maker"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage error={errors?.manufacture} message="Manufacture is Required"/>
-
+                  <ErrorMessage error={errors?.maker} message="Manufacture is Required"/>
                 </div>
               </div>
 
@@ -183,7 +211,8 @@ export default function AddProduct() {
                 <div className="mt-2">
                   <input
                     {...register("shipmentTimeInDays", { required: true })}
-                    type="number"
+                    placeholder="Enter value in this format '0-1'"
+                    type="text"
                     name="shipmentTimeInDays"
                     id="shipmentTimeInDays"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
@@ -202,15 +231,15 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <input
+                    placeholder="Enter value in this format '0-1'"
                     {...register("processingTimeInDays", { required: true })}
                     // defaultValue={processingTimeInDays}
-                    type="number"
+                    type="text"
                     name="processingTimeInDays"
                     id="processingTimeInDays"
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage error={errors?.processingTimeInDays} message="Processing time is Required"/>
-
                 </div>
               </div>
 
@@ -245,7 +274,7 @@ export default function AddProduct() {
                   {PRODUCT_TYPE.map((type) => (
                     <div className="flex items-center gap-x-3" key={type.value}>
                       <input
-                        {...register("type", { required: true })}
+                        onChange={() => setValue('type', type.value)}
                         id={type.value}
                         name="type"
                         type="radio"

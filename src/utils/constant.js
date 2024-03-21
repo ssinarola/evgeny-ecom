@@ -1,6 +1,6 @@
 export const PRODUCT_TYPE = [
-  { label: "Digital", value: "digital" },
-  { label: "Physical", value: "physical" },
+  { label: "Digital", value: "DIGITAL" },
+  { label: "Physical", value: "PHYSICAL" },
 ];
 
 export const NUMERIC_TYPE = 'NUMERIC';

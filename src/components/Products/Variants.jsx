@@ -179,8 +179,7 @@ const Variants = ({
         <label htmlFor="last-name"className="block text-sm font-medium leading-6 text-gray-900 flex">Variants</label>
         <PlusCircleIcon
           className="h-6 w-6 cursor-pointer"
-          onClick={() =>
-            appendVariants({
+          onClick={() => appendVariants({
               title: "",
               description: "",
               globalPrice: "",
@@ -192,7 +191,7 @@ const Variants = ({
           }
         />
       </div>
-      {/* Variants list */}
+      {/* Variants list */}      
       <ul>
         {fieldsVariants.map((item, variantIndex) => (
           <li key={`${item.id}-${variantIndex}`} className="border rounded p-3 my-3 relative">
@@ -245,8 +244,8 @@ const Variants = ({
                 className="h-6 w-6 cursor-pointer"
                 onClick={() => {
                   appendAttributes({
-                    attributeType: "",
-                    attributeName: "",
+                    // attributeType: "",
+                    // attributeName: "",
                   });
                   !attributeTypes.length && fetchAllAttributeType();
                 }}

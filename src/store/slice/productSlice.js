@@ -10,6 +10,23 @@ export const fetchProducts = createAsyncThunk("get/fetchProducts", async (params
   }
 );
 
+export const addProducts = createAsyncThunk("add/addProducts", async (body) => {
+    // Create product
+    const response = await axios.post(PRODUCTS_API_URL, { ...body }, { headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+      "Access-Control-Allow-Origin": "*",
+  }});
+    return response.data;
+  }
+);
+
+export const updateProduct = createAsyncThunk("add/addProducts", async (params) => {
+    // Update product
+    const response = await axios.put(PRODUCTS_API_URL, { params });
+    return response.data;
+  }
+);
+
 const initialState = {
   productsList: {
     isLoading: false,
