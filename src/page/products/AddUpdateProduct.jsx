@@ -1,13 +1,15 @@
-import { PlusCircleIcon, TrashIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import { PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { useLocation, useParams } from "react-router-dom";
 import { useFieldArray, useForm } from "react-hook-form";
-import { PRODUCT_TYPE } from "../../utils/constant";
+import { PROCESSING, PRODUCT_TYPE, SAVE, requiredKeyForCreateProduct} from "../../utils/constant";
 import ErrorMessage from "../../components/ErrorMessage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { updateProduct } from "../../services/products";
 import Variants from "../../components/Products/Variants";
 import { addProducts } from "../../store/slice/productSlice";
 import { useDispatch } from "react-redux";
+import { useProducts } from "../../store/selectorHooks";
+import LoadingIcon from "../../assets/LoadingIcon";
 // import { addProducts } from "../../store/slice/productSlice";
 
 export default function AddProduct() {
@@ -16,6 +18,7 @@ export default function AddProduct() {
   const [selectedProductDetail, setSelectedProductDetail] = useState({});
   const [attributeTypes, setAttributeTypes] = useState([]);
   const dispatch = useDispatch();
+  const { createAndUpdateProduct : { isLoading, isError }} = useProducts();
 
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
 
@@ -79,7 +82,7 @@ export default function AddProduct() {
     // }
   },[isEditProduct]);
   
-  const { register, handleSubmit, watch, control, formState: { errors }, setValue} = useForm({ defaultValues: selectedProductDetail });
+  const { register, handleSubmit, watch, control, formState: { errors }, setValue, reset} = useForm({ defaultValues: selectedProductDetail });
 
   // Append fields for tags
   const { fields: fieldsProductTags, append: appendProductTags, remove: removeProductTags} = useFieldArray({
@@ -93,43 +96,19 @@ export default function AddProduct() {
     name: "variants",
   });
 
-  // Append fields for attributes
-  // const { fields: fieldsAttributes, append: appendAttributes, remove: removeAttributes} = useFieldArray({
-  //   control,
-  //   name: "attributes",
-  // });
-  
+  const resetForm = () => {
+    reset(); removeProductTags(); removeVariants()
+  }
   const onSubmit = async (data) => {
-    console.info("onSubmit data =>", data);
     const { attributes, variants, ...productDetail } = Object.assign({}, data);
 
     const variantsAndAttributesDetails = variants.map(variant => {
         const { selectedAttributeTypeAndValue, attributesTypeAndValue, ...variantDetails } = Object.assign({}, variant);
         return variantDetails;
     })
-    
-    const staticKeys = {  
-      "listingImages": ["5674788612","56747886154"],
-      "storeId": "0f3e43ce-0a1b-4a15-a85d-aad6b5fc780f",
-      "thumbnail": "456456zmcjbbhs",
-      "video": "546546fdfdfdb",
-      "returnExchangePolicyId": "Return and Exchange Policy",
-    }
-    // API call for product creation
-    dispatch(addProducts({...staticKeys, ...productDetail, variants : variantsAndAttributesDetails}));
 
-    //  const response = await 
-    //  axios({
-    //   method: 'POST',
-    //   url: `http://192.168.100.17:8086/api${PRODUCTS_API_URL}`,
-    //   data: {...staticKeys, ...productDetail, variants : variantsAndAttributesDetails},
-    //   headers: {
-    //     'content-type': 'application/json',
-    //     'Access-Control-Allow-Methods': 'POST',
-    // }
-    // })
-    //  axios.post(`http://192.168.100.17:8086/api${PRODUCTS_API_URL}`, {...staticKeys, ...productDetail, variants : variantsAndAttributesDetails})
-    //  console.info('response =>', response)
+    // API call for product creation
+    dispatch(addProducts({body: {...requiredKeyForCreateProduct, ...productDetail, variants : variantsAndAttributesDetails}, resetForm}));
   };
 
   return (
@@ -197,7 +176,6 @@ export default function AddProduct() {
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage error={errors?.productionYear} message="Production year is Required"/>
-
                 </div>
               </div>
 
@@ -233,7 +211,6 @@ export default function AddProduct() {
                   <input
                     placeholder="Enter value in this format '0-1'"
                     {...register("processingTimeInDays", { required: true })}
-                    // defaultValue={processingTimeInDays}
                     type="text"
                     name="processingTimeInDays"
                     id="processingTimeInDays"
@@ -368,16 +345,14 @@ export default function AddProduct() {
               <Variants 
                appendVariants={appendVariants}
                fieldsVariants={fieldsVariants}
-               appendAttributes={appendAttributes}
                removeVariants={removeVariants}
                register={register}
                setAttributeTypes={setAttributeTypes}
                attributeTypes={attributeTypes}
-               fieldsAttributes={fieldsAttributes}
-               removeAttributes={removeAttributes}
                setValue={setValue}
                watch={watch}
                control={control}
+               errors={errors}
               />
           </div>
         </div>
@@ -386,14 +361,17 @@ export default function AddProduct() {
           <button
             type="reset"
             className="text-sm font-semibold leading-6 text-gray-900"
+            disabled={isLoading}
+            onClick={resetForm}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            disabled={isLoading}
+            className="flex gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
-            Save
+           {isLoading ? <><LoadingIcon className="h-5 w-5"/>{PROCESSING}</> : SAVE}  
           </button>
         </div>
       </form>
