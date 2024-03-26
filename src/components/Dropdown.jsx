@@ -7,6 +7,9 @@ function Dropdown(props) {
     onChange = () => {},
     isMulti = false,
     isSearchable = true,
+    placeholder="Select...",
+    defaultInputValue,
+    defaultValue
   } = props;
 
   return (
@@ -16,6 +19,9 @@ function Dropdown(props) {
       onChange={onChange}
       isMulti={isMulti}
       isSearchable={isSearchable}
+      placeholder={placeholder}
+      defaultInputValue={defaultInputValue}
+      defaultValue={defaultValue}
     />
   );
 }

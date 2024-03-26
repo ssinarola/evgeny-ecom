@@ -1,16 +1,15 @@
 import { PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { useLocation, useParams } from "react-router-dom";
 import { useFieldArray, useForm } from "react-hook-form";
-import { PROCESSING, PRODUCT_TYPE, SAVE, requiredKeyForCreateProduct} from "../../utils/constant";
+import { ENUM_TYPE, PROCESSING, PRODUCT_TYPE, SAVE, requiredKeyForCreateProduct} from "../../utils/constant";
 import ErrorMessage from "../../components/ErrorMessage";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { updateProduct } from "../../services/products";
 import Variants from "../../components/Products/Variants";
 import { addProducts } from "../../store/slice/productSlice";
 import { useDispatch } from "react-redux";
 import { useProducts } from "../../store/selectorHooks";
 import LoadingIcon from "../../assets/LoadingIcon";
-// import { addProducts } from "../../store/slice/productSlice";
 
 export default function AddProduct() {
   const { pathname } = useLocation();
@@ -21,68 +20,28 @@ export default function AddProduct() {
   const { createAndUpdateProduct : { isLoading, isError }} = useProducts();
 
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
+  
+  const { register, handleSubmit, watch, control, formState: { errors }, setValue, reset} = useForm();
 
-  const getProductById = useCallback(async () => {
-    // const productDetail = await updateProduct({ productId });
-    // setSelectedProductDetail(productDetail?.data);
-    setSelectedProductDetail({
-      storeId: "0f3e43ce-0a1b-4a15-a85d-aad6b5fc780f",
-      categoryId: "Photography and Prints",
-      maker: "Maker Name",
-      productionYear: "2000",
-      type: "DIGITAL",
-      customizable: true,
-      customizableComment: "Additional comments",
-      shipmentTimeInDays: "1-3",
-      processingTimeInDays: "5-7",
-      shippingPrice: 10.99,
-      productTags: ["fkf", "ddf", "fsdds", "dfsddsf"],
-      variants:[
-        {
-          title: "",
-          description: "",
-          domesticPrice: 0,
-          globalPrice: 0,
-          sku: "",
-          quantity: 0,
-          attributes: []
-        }
-      ]
-    });
-    appendProductTags(["fkf", "ddf", "fsdds", "dfsddsf"]);
-    appendVariants([{
-      title: "variantss",
-      description: "name of variants",
-      domesticPrice: 12.99,
-      globalPrice: 10,
-      sku: "sku",
-      quantity: "5",
-      attributes: [],
-      attributesTypeAndValue: [],
-      selectedAttributes:[]
-    }, {
-      title: "variantss",
-      description: "name of variants",
-      domesticPrice: 12.99,
-      globalPrice: 10,
-      sku: "sku",
-      quantity: "5",
-      attributes: [],
-      attributesTypeAndValue: [],
-      selectedAttributes:[]
-    }]);
-  }, [productId]);
+  // const { register, handleSubmit, watch, control, formState: { errors }, setValue, reset} = useForm({ defaultValues: useMemo(() => {
+  //   return {...selectedProductDetail}
+  // }, [selectedProductDetail])});
+
+  useEffect(() => { reset(selectedProductDetail) }, [selectedProductDetail]);
+
+  const getProductById = async () => {    
+    const productDetail = await updateProduct({ productId });
+    setSelectedProductDetail(productDetail?.data);
+  };
 
   useEffect(() => {
-    // if(isEditProduct){
-    //   // Get product API call and set form value with product detail
-    //   getProductById();
-    // }else{
-    //   setSelectedProductDetail({})
-    // }
-  },[isEditProduct]);
-  
-  const { register, handleSubmit, watch, control, formState: { errors }, setValue, reset} = useForm({ defaultValues: selectedProductDetail });
+    if(isEditProduct){
+      // API call to Get product detail by ID and set form value with product detail
+      getProductById();
+    } else {
+      setSelectedProductDetail({})
+    }
+  },[isEditProduct, productId]);
 
   // Append fields for tags
   const { fields: fieldsProductTags, append: appendProductTags, remove: removeProductTags} = useFieldArray({
@@ -100,13 +59,40 @@ export default function AddProduct() {
     reset(); removeProductTags(); removeVariants()
   }
   const onSubmit = async (data) => {
-    const { attributes, variants, ...productDetail } = Object.assign({}, data);
+    // console.info('onSubmit data =>', data);
+    
+    const { variants, ...productDetail } = Object.assign({}, data);
+    
 
-    const variantsAndAttributesDetails = variants.map(variant => {
-        const { selectedAttributeTypeAndValue, attributesTypeAndValue, ...variantDetails } = Object.assign({}, variant);
-        return variantDetails;
-    })
+    const variantsAndAttributesDetails = variants.map((variant) => {
+      const { attributes, ...variantDetails } = Object.assign({}, variant);
+      const attributeValue = attributes.map((attr) => {
+        return Object.keys(attr)
+          .filter(
+            (attrKey) =>
+              attrKey === "attributeId" ||
+              attrKey === "attributeValue" ||
+              attrKey === "attributeUnitId" ||
+              attrKey === "attributeValueIds"
+          )
+          .reduce((attributeObject, key) => {
+            if (key === "attributeValueIds") {
+              attributeObject[key] = attr[key].map(
+                (value) => value.attributeValueId
+              );
+            } else if (key === "attributeUnitId") {
+              attributeObject[key] = attr[key]["attributeUnitId"];
+            } else {
+              attributeObject[key] = attr[key];
+            }
 
+            return attributeObject;
+          }, {});
+      });
+
+      return { ...variantDetails, attributes: attributeValue };
+    });
+    
     // API call for product creation
     dispatch(addProducts({body: {...requiredKeyForCreateProduct, ...productDetail, variants : variantsAndAttributesDetails}, resetForm}));
   };
@@ -123,7 +109,7 @@ export default function AddProduct() {
               <div className="">
                 <label
                   htmlFor="first-name"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="text-sm font-medium leading-6 text-gray-900"
                 >
                   Category
                 </label>
@@ -133,7 +119,7 @@ export default function AddProduct() {
                     id="categoryId"
                     name="categoryId"
                     autoComplete="category-name"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
+                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   >
                     <option>1</option>
                     <option>2</option>
@@ -144,7 +130,7 @@ export default function AddProduct() {
               <div className="">
                 <label
                   htmlFor="last-name"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="text-sm font-medium leading-6 text-gray-900"
                 >
                   Manufacture
                 </label>
@@ -154,7 +140,7 @@ export default function AddProduct() {
                     type="text"
                     name="maker"
                     id="maker"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage error={errors?.maker} message="Manufacture is Required"/>
                 </div>
@@ -163,7 +149,7 @@ export default function AddProduct() {
               <div className="">
                 <label
                   htmlFor="first-name"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="text-sm font-medium leading-6 text-gray-900"
                 >
                   Year of manufacuring
                 </label>
@@ -173,7 +159,7 @@ export default function AddProduct() {
                     type="number"
                     name="productionYear"
                     id="productionYear"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage error={errors?.productionYear} message="Production year is Required"/>
                 </div>
@@ -182,7 +168,7 @@ export default function AddProduct() {
               <div className="">
                 <label
                   htmlFor="first-name"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="text-sm font-medium leading-6 text-gray-900"
                 >
                   Shipping time in Days
                 </label>
@@ -193,7 +179,7 @@ export default function AddProduct() {
                     type="text"
                     name="shipmentTimeInDays"
                     id="shipmentTimeInDays"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage error={errors?.shipmentTimeInDays} message="Shipment time is Required"/>
 
@@ -203,7 +189,7 @@ export default function AddProduct() {
               <div className="">
                 <label
                   htmlFor="last-name"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="text-sm font-medium leading-6 text-gray-900"
                 >
                   Processing time in Days
                 </label>
@@ -214,7 +200,7 @@ export default function AddProduct() {
                     type="text"
                     name="processingTimeInDays"
                     id="processingTimeInDays"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage error={errors?.processingTimeInDays} message="Processing time is Required"/>
                 </div>
@@ -223,17 +209,18 @@ export default function AddProduct() {
               <div className="">
                 <label
                   htmlFor="shippingPrice"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="text-sm font-medium leading-6 text-gray-900"
                 >
                   Shipping price
                 </label>
                 <div className="mt-2">
                   <input
                     {...register("shippingPrice", { required: true })}
+                    step="0.01"
                     type="number"
                     name="shippingPrice"
                     id="shippingPrice"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage error={errors?.shippingPrice} message="Shipping price is Required"/>
 
@@ -243,7 +230,7 @@ export default function AddProduct() {
               <div className="">
                 <label
                   htmlFor="last-name"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="text-sm font-medium leading-6 text-gray-900"
                 >
                   Product Type
                 </label>
@@ -259,7 +246,7 @@ export default function AddProduct() {
                       />
                       <label
                         for={type.value}
-                        className="block text-sm font-medium leading-6 text-gray-900"
+                        className="text-sm font-medium leading-6 text-gray-900"
                       >
                         {type.label}
                       </label>
@@ -271,7 +258,7 @@ export default function AddProduct() {
               <div className=" flex gap-5 items-center">
                 <label
                   htmlFor="Customizable"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="text-sm font-medium leading-6 text-gray-900"
                 >
                   Customizable
                 </label>
@@ -288,7 +275,7 @@ export default function AddProduct() {
                 <div className="">
                   <label
                     htmlFor="last-name"
-                    className="block text-sm font-medium leading-6 text-gray-900"
+                    className="text-sm font-medium leading-6 text-gray-900"
                   >
                     Personalized message for buyer
                   </label>
@@ -298,7 +285,7 @@ export default function AddProduct() {
                       type="text"
                       name="customizableComment"
                       id="customizableComment"
-                      className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                      className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
                     <ErrorMessage error={errors?.customizableComment} message="Customizable Comment is Required"/>
                   </div>
@@ -324,7 +311,7 @@ export default function AddProduct() {
                   {fieldsProductTags.map((item, index) => (
                     <li key={item.id} className="relative">
                       <input
-                        {...register(`productTags[${index}]`)}
+                        {...register(`productTags[${index}]`, { required: true })}
                         className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                       />
                       <button
@@ -353,6 +340,7 @@ export default function AddProduct() {
                watch={watch}
                control={control}
                errors={errors}
+               isEditProduct={isEditProduct}
               />
           </div>
         </div>

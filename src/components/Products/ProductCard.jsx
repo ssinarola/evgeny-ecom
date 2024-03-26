@@ -8,7 +8,7 @@ function ProductCard({ product }) {
       <div className="p-8 sm:p-8 lg:flex-auto">
         <h3 className="text-2xl font-bold tracking-tight text-gray-900 flex justify-between">
           {product.maker} 
-          <PencilSquareIcon className="h-8 w-8" onClick={() => navigate(`/edit-product/${product?.productId}`)}/>
+          <PencilSquareIcon className="h-8 w-8 cursor-pointer" onClick={() => navigate(`/edit-product/${product?.productId}`)}/>
         </h3>
         <div className="grid grid-rows-3 grid-flow-col gap-1">
           <div className="font-medium flex gap-1">
@@ -45,8 +45,8 @@ function ProductCard({ product }) {
           </div>
           <div className="font-medium flex gap-1">
             <p className="text-gray-900">Tags : </p>
-            {product?.productTags.map((tag) => (
-              <span className="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+            {product?.productTags.map((tag, tagIndex) => (
+              <span key={`${tag}-${tagIndex}`} className="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
                 {tag}
               </span>
             ))}
