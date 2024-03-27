@@ -18,9 +18,9 @@ export const addProducts = createAsyncThunk("add/addProducts", async ({body, res
   }
 );
 
-export const updateProduct = createAsyncThunk("add/addProducts", async (params) => {
+export const updateProduct = createAsyncThunk("update/updateProducts", async ({productId, body}) => {
     // Update product
-    const response = await axios.put(PRODUCTS_API_URL, { params });
+    const response = await axios.put(`${PRODUCTS_API_URL}/${productId}`, { ...body });
     return response.data;
   }
 );
@@ -58,7 +58,7 @@ const productSlice = createSlice({
     });
 
   // Case for Create/Update product 
-    builder.addCase(addProducts.pending, (state, action) => {      
+    builder.addCase(addProducts.pending, (state, action) => { 
         state.createAndUpdateProduct.isLoading = true;
     });
     builder.addCase(addProducts.fulfilled, (state, {meta}) => {    
@@ -67,6 +67,18 @@ const productSlice = createSlice({
       toast.success("Product created Successfully!");
     });
     builder.addCase(addProducts.rejected, (state, action) => {
+        state.createAndUpdateProduct.isLoading = false;
+        state.createAndUpdateProduct.isError = true;
+    });
+
+    builder.addCase(updateProduct.pending, (state, action) => { 
+        state.createAndUpdateProduct.isLoading = true;
+    });
+    builder.addCase(updateProduct.fulfilled, (state) => {    
+      state.createAndUpdateProduct.isLoading = false;
+      toast.success("Product updated Successfully!");
+    });
+    builder.addCase(updateProduct.rejected, (state, action) => {
         state.createAndUpdateProduct.isLoading = false;
         state.createAndUpdateProduct.isError = true;
     });

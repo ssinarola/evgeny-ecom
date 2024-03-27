@@ -9,12 +9,15 @@ function Dropdown(props) {
     isSearchable = true,
     placeholder="Select...",
     defaultInputValue,
-    defaultValue
+    defaultValue,
+    onMenuOpen,
+    value
   } = props;
 
   return (
     <Select
       {...props}
+      value={value}
       options={options}
       onChange={onChange}
       isMulti={isMulti}
@@ -22,8 +25,9 @@ function Dropdown(props) {
       placeholder={placeholder}
       defaultInputValue={defaultInputValue}
       defaultValue={defaultValue}
+      onMenuOpen={onMenuOpen}
     />
   );
 }
 
-export default memo(Dropdown);
+export default Dropdown;

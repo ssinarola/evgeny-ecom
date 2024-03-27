@@ -3,6 +3,12 @@ export const PRODUCT_TYPE = [
   { label: "Physical", value: "PHYSICAL" },
 ];
 
+export const PRODUCT_CATEGORY = [
+  { label: 1, value: 1 },
+  { label: 2, value: 2 },
+  { label: 3, value: 3 },
+];
+
 export const NUMERIC_TYPE = 'NUMERIC';
 export const STRING_TYPE = 'STRING';
 export const LINK_TYPE = 'LINK';

@@ -1,15 +1,16 @@
 import { PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
-import { useLocation, useParams } from "react-router-dom";
-import { useFieldArray, useForm } from "react-hook-form";
-import { ENUM_TYPE, PROCESSING, PRODUCT_TYPE, SAVE, requiredKeyForCreateProduct} from "../../utils/constant";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { ENUM_TYPE, PROCESSING, PRODUCT_CATEGORY, PRODUCT_TYPE, SAVE, requiredKeyForCreateProduct} from "../../utils/constant";
 import ErrorMessage from "../../components/ErrorMessage";
 import { useEffect, useMemo, useState } from "react";
-import { updateProduct } from "../../services/products";
+import { getProductById } from "../../services/products";
 import Variants from "../../components/Products/Variants";
-import { addProducts } from "../../store/slice/productSlice";
+import { addProducts, updateProduct } from "../../store/slice/productSlice";
 import { useDispatch } from "react-redux";
 import { useProducts } from "../../store/selectorHooks";
 import LoadingIcon from "../../assets/LoadingIcon";
+import Dropdown from "../../components/Dropdown";
 
 export default function AddProduct() {
   const { pathname } = useLocation();
@@ -17,27 +18,25 @@ export default function AddProduct() {
   const [selectedProductDetail, setSelectedProductDetail] = useState({});
   const [attributeTypes, setAttributeTypes] = useState([]);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { createAndUpdateProduct : { isLoading, isError }} = useProducts();
 
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
   
   const { register, handleSubmit, watch, control, formState: { errors }, setValue, reset} = useForm();
 
-  // const { register, handleSubmit, watch, control, formState: { errors }, setValue, reset} = useForm({ defaultValues: useMemo(() => {
-  //   return {...selectedProductDetail}
-  // }, [selectedProductDetail])});
+  // useEffect(() => { reset(selectedProductDetail) }, [selectedProductDetail]);
 
-  useEffect(() => { reset(selectedProductDetail) }, [selectedProductDetail]);
-
-  const getProductById = async () => {    
-    const productDetail = await updateProduct({ productId });
-    setSelectedProductDetail(productDetail?.data);
+  const fetchProductById = async () => {    
+    const productDetail = await getProductById({ productId });    
+    // setSelectedProductDetail({ ...productDetail?.data });
+    reset(productDetail?.data)
   };
 
   useEffect(() => {
     if(isEditProduct){
       // API call to Get product detail by ID and set form value with product detail
-      getProductById();
+      fetchProductById();
     } else {
       setSelectedProductDetail({})
     }
@@ -59,11 +58,9 @@ export default function AddProduct() {
     reset(); removeProductTags(); removeVariants()
   }
   const onSubmit = async (data) => {
-    // console.info('onSubmit data =>', data);
-    
+    console.info('onSubmit data =>', data);  
     const { variants, ...productDetail } = Object.assign({}, data);
-    
-
+  
     const variantsAndAttributesDetails = variants.map((variant) => {
       const { attributes, ...variantDetails } = Object.assign({}, variant);
       const attributeValue = attributes.map((attr) => {
@@ -93,6 +90,12 @@ export default function AddProduct() {
       return { ...variantDetails, attributes: attributeValue };
     });
     
+    if(isEditProduct){
+      dispatch(updateProduct({productId, body: {...requiredKeyForCreateProduct, ...productDetail, variants : variantsAndAttributesDetails}}));  
+      navigate("/")
+      return
+    }
+    
     // API call for product creation
     dispatch(addProducts({body: {...requiredKeyForCreateProduct, ...productDetail, variants : variantsAndAttributesDetails}, resetForm}));
   };
@@ -100,7 +103,7 @@ export default function AddProduct() {
   return (
     <div className="bg-white mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-7xl lg:px-8">
       <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-        {isEditProduct ? 'Update' : 'Add'} Product
+        {isEditProduct ? "Update" : "Add"} Product
       </h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-12">
@@ -114,17 +117,25 @@ export default function AddProduct() {
                   Category
                 </label>
                 <div className="mt-2">
-                  <select
-                    {...register("categoryId")}
-                    id="categoryId"
-                    name="categoryId"
-                    autoComplete="category-name"
-                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  >
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                  </select>
+                  <Controller
+                    rules={{ required: true }}
+                    control={control}
+                    name={`categoryId`}
+                    render={({ field: { onChange, value } }) => {
+                      return (
+                        <Dropdown
+                          placeholder="Select Category"
+                          options={PRODUCT_CATEGORY}
+                          defaultValue={{ label:1, value: 1 }}
+                          onChange={(selectedItem) => onChange(selectedItem.value)}
+                        />
+                      );
+                    }}
+                  />
+                  <ErrorMessage
+                    error={errors?.categoryId}
+                    message="Category is Required"
+                  />
                 </div>
               </div>
               <div className="">
@@ -142,7 +153,10 @@ export default function AddProduct() {
                     id="maker"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage error={errors?.maker} message="Manufacture is Required"/>
+                  <ErrorMessage
+                    error={errors?.maker}
+                    message="Manufacture is Required"
+                  />
                 </div>
               </div>
 
@@ -161,7 +175,10 @@ export default function AddProduct() {
                     id="productionYear"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage error={errors?.productionYear} message="Production year is Required"/>
+                  <ErrorMessage
+                    error={errors?.productionYear}
+                    message="Production year is Required"
+                  />
                 </div>
               </div>
 
@@ -181,8 +198,10 @@ export default function AddProduct() {
                     id="shipmentTimeInDays"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage error={errors?.shipmentTimeInDays} message="Shipment time is Required"/>
-
+                  <ErrorMessage
+                    error={errors?.shipmentTimeInDays}
+                    message="Shipment time is Required"
+                  />
                 </div>
               </div>
 
@@ -202,7 +221,10 @@ export default function AddProduct() {
                     id="processingTimeInDays"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage error={errors?.processingTimeInDays} message="Processing time is Required"/>
+                  <ErrorMessage
+                    error={errors?.processingTimeInDays}
+                    message="Processing time is Required"
+                  />
                 </div>
               </div>
 
@@ -222,8 +244,10 @@ export default function AddProduct() {
                     id="shippingPrice"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage error={errors?.shippingPrice} message="Shipping price is Required"/>
-
+                  <ErrorMessage
+                    error={errors?.shippingPrice}
+                    message="Shipping price is Required"
+                  />
                 </div>
               </div>
 
@@ -235,24 +259,38 @@ export default function AddProduct() {
                   Product Type
                 </label>
                 <div className="mt-2">
-                  {PRODUCT_TYPE.map((type) => (
-                    <div className="flex items-center gap-x-3" key={type.value}>
-                      <input
-                        onChange={() => setValue('type', type.value)}
-                        id={type.value}
-                        name="type"
-                        type="radio"
-                        className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                      />
-                      <label
-                        for={type.value}
-                        className="text-sm font-medium leading-6 text-gray-900"
-                      >
-                        {type.label}
-                      </label>
-                    </div>
-                  ))}
-                  <ErrorMessage error={errors?.type} message="Type is Required"/>
+                  <Controller
+                    rules={{ required: true }}
+                    control={control}
+                    name={"type"}
+                    render={({ field: { onChange, value } }) => {
+                      return PRODUCT_TYPE.map((type) => (
+                        <div
+                          className="flex items-center gap-x-3"
+                          key={type.value}
+                        >
+                          <input
+                            checked={value === type.value}
+                            onChange={() => onChange(type.value)}
+                            id={type.value}
+                            name="type"
+                            type="radio"
+                            className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                          />
+                          <label
+                            for={type.value}
+                            className="text-sm font-medium leading-6 text-gray-900"
+                          >
+                            {type.label}
+                          </label>
+                        </div>
+                      ));
+                    }}
+                  />
+                  <ErrorMessage
+                    error={!watch(`type`) && errors?.type}
+                    message="Type is Required"
+                  />
                 </div>
               </div>
               <div className=" flex gap-5 items-center">
@@ -263,7 +301,7 @@ export default function AddProduct() {
                   Customizable
                 </label>
                 <input
-                  {...register("customizable", { required: true })}
+                  {...register("customizable")}
                   id="customizable"
                   name="customizable"
                   type="checkbox"
@@ -287,61 +325,66 @@ export default function AddProduct() {
                       id="customizableComment"
                       className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
-                    <ErrorMessage error={errors?.customizableComment} message="Customizable Comment is Required"/>
+                    <ErrorMessage
+                      error={
+                        watch(`customizable`) && errors?.customizableComment
+                      }
+                      message="Customizable Comment is Required"
+                    />
                   </div>
                 </div>
               )}
             </div>
-            
+
             {/* Tags section start */}
             <div className="my-4">
-                <div className="flex gap-1">
-                  <label
-                    htmlFor="last-name"
-                    className=" text-sm font-medium leading-6 text-gray-900 flex"
-                  >
-                    Tags
-                  </label>
-                  <PlusCircleIcon
-                    className="h-6 w-6 cursor-pointer"
-                    onClick={() => appendProductTags(" ")}
-                  />
-                </div>
-                <ul className="grid grid-cols-5 gap-4 mt-1">
-                  {fieldsProductTags.map((item, index) => (
-                    <li key={item.id} className="relative">
-                      <input
-                        {...register(`productTags[${index}]`, { required: true })}
-                        className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeProductTags(index)}
-                        className="-translate-y-1/2 absolute right-0 translate-x-1/2 top-0"
-                      >
-                        {/* <TrashIcon className="h-5 w-6 text-red-600" /> */}
-                        <XCircleIcon className="h-6 w-6 text-red-600"/>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+              <div className="flex gap-1">
+                <label
+                  htmlFor="last-name"
+                  className=" text-sm font-medium leading-6 text-gray-900 flex"
+                >
+                  Tags
+                </label>
+                <PlusCircleIcon
+                  className="h-6 w-6 cursor-pointer"
+                  onClick={() => appendProductTags(" ")}
+                />
+              </div>
+              <ul className="grid grid-cols-5 gap-4 mt-1">
+                {fieldsProductTags.map((item, index) => (
+                  <li key={item.id} className="relative">
+                    <input
+                      {...register(`productTags[${index}]`, { required: true })}
+                      className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeProductTags(index)}
+                      className="-translate-y-1/2 absolute right-0 translate-x-1/2 top-0"
+                    >
+                      {/* <TrashIcon className="h-5 w-6 text-red-600" /> */}
+                      <XCircleIcon className="h-6 w-6 text-red-600" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
-              {/* Tags section end */}
-              
-              {/* Variants section start */}
-              <Variants 
-               appendVariants={appendVariants}
-               fieldsVariants={fieldsVariants}
-               removeVariants={removeVariants}
-               register={register}
-               setAttributeTypes={setAttributeTypes}
-               attributeTypes={attributeTypes}
-               setValue={setValue}
-               watch={watch}
-               control={control}
-               errors={errors}
-               isEditProduct={isEditProduct}
-              />
+            {/* Tags section end */}
+
+            {/* Variants section start */}
+            <Variants
+              appendVariants={appendVariants}
+              fieldsVariants={fieldsVariants}
+              removeVariants={removeVariants}
+              register={register}
+              setAttributeTypes={setAttributeTypes}
+              attributeTypes={attributeTypes}
+              setValue={setValue}
+              watch={watch}
+              control={control}
+              errors={errors}
+              isEditProduct={isEditProduct}
+            />
           </div>
         </div>
 
@@ -359,7 +402,14 @@ export default function AddProduct() {
             disabled={isLoading}
             className="flex gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
-           {isLoading ? <><LoadingIcon className="h-5 w-5"/>{PROCESSING}</> : SAVE}  
+            {isLoading ? (
+              <>
+                <LoadingIcon className="h-5 w-5" />
+                {PROCESSING}
+              </>
+            ) : (
+              SAVE
+            )}
           </button>
         </div>
       </form>

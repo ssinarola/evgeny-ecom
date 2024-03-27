@@ -1,6 +1,5 @@
 import React from "react";
 import { PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
-
 import Attribute from "./Attribute";
 import ErrorMessage from "../ErrorMessage";
 
@@ -50,20 +49,20 @@ const Variants = ({
             key={`${item.id}-${variantIndex}`}
             className="border rounded p-3 my-3 relative"
           >
-            <p className="font-medium  text-gray-900">
+            <p className="font-medium text-gray-900 bg-gray-100 mb-2 p-2 rounded-lg" style={{textAlign:"center"}}>
               Variant - {variantIndex + 1}
             </p>
             {/* Section start - Variants input fields */}
             <div className="grid grid-cols-3">
-            <div>
+            {/* <div> */}
                 <input
                     placeholder="Enter Variant Title"
                     {...register(`variants.${variantIndex}.title`, { required: true })}
-                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    // className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    // className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage error={errors?.maker} message="Variant Title is Required"/>
-              </div>
+                  {/* <ErrorMessage error={errors?.maker} message="Variant Title is Required"/> */}
+              {/* </div> */}
              
               <input
                 placeholder="Enter Variant Description"
