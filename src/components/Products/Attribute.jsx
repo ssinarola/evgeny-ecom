@@ -10,8 +10,7 @@ import axios from "../../config/axios";
 import { ENUM_TYPE, LINK_TYPE, NUMERIC_TYPE, STRING_TYPE } from "../../utils/constant";
 import ErrorMessage from "../ErrorMessage";
 
-export default function Attribute({setValue, variantIndex, control, register, errors, attributeTypes ,watch, setAttributeTypes, isEditProduct}) {
-  
+export default function Attribute({setValue, variantIndex, control, errors, attributeTypes ,watch, setAttributeTypes, isEditProduct}) {  
   // Append fields for attributes
   const { fields: fieldsAttributes, append: appendAttributes, remove: removeAttributes} = useFieldArray({
     control,
@@ -27,7 +26,6 @@ export default function Attribute({setValue, variantIndex, control, register, er
         [
           LINK_TYPE,
           <Controller
-            rules={{ required: true }}
             control={control}
             name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeValue`}
             render={({ field: { onChange, value } }) => {                            
@@ -38,7 +36,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
                 onChange={(event) => onChange(event.target.value)}
                 className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
-              {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> }
+              {!value && <ErrorMessage error={!value} message={"Attribute Value is required"} /> }
+              {/* {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors?.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> } */}
             </div>}
             }
           />
@@ -57,7 +56,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
                 onChange={(event) => onChange(event.target.value)}
                 className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
-              {errors?.variants && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> }
+              {!value && <ErrorMessage error={!value} message={"Attribute Value is required"} /> }
+              {/* {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors?.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> } */}
             </div>
           )}
         />
@@ -80,7 +80,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
                     placeholder="Enter..."
                     onChange={onChange}
                   />
-                  {errors?.variants && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> }
+                  {/* {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors?.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> } */}
+                  {!value && <ErrorMessage error={!value} message={"Attribute Value is required"} /> }
                 </div>
               );
             }}
@@ -128,7 +129,7 @@ export default function Attribute({setValue, variantIndex, control, register, er
                     })}
                     onChange={onChange}
                   />
-                  {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeUnitId} message={errors.variants[variantIndex].attributes[attributeIndex]?.attributeUnitId?.message} /> }
+                  {!value && <ErrorMessage error={!value} message={"Attribute unit is required"} /> }
                 </div>
                 );
               }}
@@ -138,6 +139,7 @@ export default function Attribute({setValue, variantIndex, control, register, er
         [
           ENUM_TYPE,
           <Controller
+            rules={{ required: true }}
             control={control}
             name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeValues`}
             render={({ field: { onChange, value } }) => {
@@ -201,7 +203,7 @@ export default function Attribute({setValue, variantIndex, control, register, er
                     );
                   }}
                 />
-                {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValueIds} message={errors.variants[variantIndex].attributes[attributeIndex]?.attributeValueIds?.message} /> }
+                {!value && <ErrorMessage error={!value} message={"Attribute value is required"} /> }
                 </div>
               );
             }}
@@ -265,11 +267,10 @@ export default function Attribute({setValue, variantIndex, control, register, er
           >
             <div className="grid grid-cols-4 gap-2">
                <Controller
-                rules={{ required :"AttrybuteType is required"}}
                 disabled={isEditProduct && !!fieldsAttributes[attributeIndex].productAttributeId}
                 control={control}
                 name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeType`}
-                render={({ field: { onChange, value, disabled}}) => {                                                                                                                                                                                        
+                render={({ field: { onChange, value, disabled}}) => {                                                                                                                                                                                                          
                   return (
                   <div>
                     <Dropdown
@@ -277,7 +278,7 @@ export default function Attribute({setValue, variantIndex, control, register, er
                       placeholder="Select Attribute Type"
                       options={attributeTypes}
                       defaultValue={value ? {label: value?.typeName, value: value?.typeId} : "Select Attribute Type" }
-                      onChange={(selected) =>{
+                      onChange={(selected) => {
                         onChange(selected);
                         getAttributesAsPerAttributeType(
                           selected,
@@ -285,7 +286,7 @@ export default function Attribute({setValue, variantIndex, control, register, er
                           attributeIndex,
                         )}}
                     />
-                     {/* {errors?.variants && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeType} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeType?.message} /> } */}
+                     {!value && <ErrorMessage error={!value} message={"Attribute type is required"} /> }
                     </div>                   
                   );
                 }}
@@ -322,7 +323,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
                         );
                       }}
                     />
-                     {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeName} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeName?.message} /> }
+                     {!value && <ErrorMessage error={!value} message={"Attribute is required"} /> }
+                     {/* {errors?.variants && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeName} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeName?.message} /> } */}
                     </div>
                   );
                 }}
