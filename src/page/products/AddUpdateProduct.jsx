@@ -1,7 +1,8 @@
 import { PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
-import { ENUM_TYPE, PROCESSING, PRODUCT_CATEGORY, PRODUCT_TYPE, SAVE, requiredKeyForCreateProduct} from "../../utils/constant";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { ENUM_TYPE, NUMERIC_TYPE, PROCESSING, PRODUCT_CATEGORY, PRODUCT_TYPE, SAVE, requiredKeyForCreateProduct} from "../../utils/constant";
 import ErrorMessage from "../../components/ErrorMessage";
 import { useEffect, useMemo, useState } from "react";
 import { getProductById } from "../../services/products";
@@ -11,6 +12,7 @@ import { useDispatch } from "react-redux";
 import { useProducts } from "../../store/selectorHooks";
 import LoadingIcon from "../../assets/LoadingIcon";
 import Dropdown from "../../components/Dropdown";
+import { productValidationSchema } from "../../components/Products/validation";
 
 export default function AddProduct() {
   const { pathname } = useLocation();
@@ -23,16 +25,18 @@ export default function AddProduct() {
 
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
   
-  const { register, handleSubmit, watch, control, formState: { errors }, setValue, reset} = useForm();
+  const { register, handleSubmit, watch, control, formState: { dirtyFields, errors }, setValue, reset} = useForm({
+    resolver: yupResolver(productValidationSchema) 
+  });
 
-  // useEffect(() => { reset(selectedProductDetail) }, [selectedProductDetail]);
-
+  useEffect(() => {
+    reset(selectedProductDetail);
+  },[selectedProductDetail]);
+  
   const fetchProductById = async () => {    
     const productDetail = await getProductById({ productId });    
-    // setSelectedProductDetail({ ...productDetail?.data });
-    reset(productDetail?.data)
-  };
-
+    setSelectedProductDetail(productDetail?.data);
+  };  
   useEffect(() => {
     if(isEditProduct){
       // API call to Get product detail by ID and set form value with product detail
@@ -57,47 +61,57 @@ export default function AddProduct() {
   const resetForm = () => {
     reset(); removeProductTags(); removeVariants()
   }
-  const onSubmit = async (data) => {
-    console.info('onSubmit data =>', data);  
-    const { variants, ...productDetail } = Object.assign({}, data);
-  
-    const variantsAndAttributesDetails = variants.map((variant) => {
-      const { attributes, ...variantDetails } = Object.assign({}, variant);
-      const attributeValue = attributes.map((attr) => {
-        return Object.keys(attr)
-          .filter(
-            (attrKey) =>
-              attrKey === "attributeId" ||
-              attrKey === "attributeValue" ||
-              attrKey === "attributeUnitId" ||
-              attrKey === "attributeValueIds"
-          )
-          .reduce((attributeObject, key) => {
-            if (key === "attributeValueIds") {
-              attributeObject[key] = attr[key].map(
-                (value) => value.attributeValueId
-              );
-            } else if (key === "attributeUnitId") {
-              attributeObject[key] = attr[key]["attributeUnitId"];
-            } else {
-              attributeObject[key] = attr[key];
-            }
 
-            return attributeObject;
-          }, {});
-      });
+const createProductPayload = (data) =>{
+  const payload = { ...data }; // Start with a copy of the original data
 
-      return { ...variantDetails, attributes: attributeValue };
+  // Process variants:
+  payload.variants = data.variants.map((variant) => {
+    const variantPayload = { ...variant }; // Copy variant object
+
+    // Process attributes:
+    variantPayload.attributes = variant.attributes.map((attribute) => {
+      const attributePayload = {};
+
+      attributePayload.attributeId = attribute.attributeId;
+
+      if (attribute.attributeValueType === "NUMERIC") {
+        attributePayload.attributeValue = attribute.attributeValue;
+        attributePayload.attributeUnitId = attribute.attributeUnit.attributeUnitId;
+      } else if (attribute.attributeValueType === "ENUM") {
+        attributePayload.attributeValuesIds = attribute.attributeValues.map(
+          (value) => value.attributeValueId
+        );
+      } else {
+        // Handle other attributeValueTypes (LINK, etc.) if needed
+        attributePayload.attributeValue = attribute.attributeValue;
+      }
+
+      return attributePayload;
     });
-    
+
+    return variantPayload;
+  });
+
+  return payload;
+}
+
+  const onSubmit = async (data) => {
+    console.info('data submit =>', data)
+    const productObject = createProductPayload(data)
+
     if(isEditProduct){
-      dispatch(updateProduct({productId, body: {...requiredKeyForCreateProduct, ...productDetail, variants : variantsAndAttributesDetails}}));  
-      navigate("/")
-      return
+      // console.info('filterData =>',filterData(productObject))
+
+      // console.info('updatedObject =>', updatedObject)
+      // dispatch(updateProduct({productId, body: updatedObject}));  
+
+      // navigate("/")
+      return;
+    }else{
+      // API call for product creation
+      dispatch(addProducts({body: {...requiredKeyForCreateProduct, ...productObject}, resetForm}));
     }
-    
-    // API call for product creation
-    dispatch(addProducts({body: {...requiredKeyForCreateProduct, ...productDetail, variants : variantsAndAttributesDetails}, resetForm}));
   };
 
   return (
@@ -118,7 +132,7 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <Controller
-                    rules={{ required: true }}
+                    // rules={{ required: true }}
                     control={control}
                     name={`categoryId`}
                     render={({ field: { onChange, value } }) => {
@@ -132,10 +146,7 @@ export default function AddProduct() {
                       );
                     }}
                   />
-                  <ErrorMessage
-                    error={errors?.categoryId}
-                    message="Category is Required"
-                  />
+                  <ErrorMessage error={errors?.categoryId} message={errors?.categoryId?.message} />
                 </div>
               </div>
               <div className="">
@@ -147,16 +158,13 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <input
-                    {...register("maker", { required: true })}
+                    {...register("maker")}
                     type="text"
                     name="maker"
                     id="maker"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage
-                    error={errors?.maker}
-                    message="Manufacture is Required"
-                  />
+                  <ErrorMessage error={errors?.maker} message={errors?.maker?.message}/>
                 </div>
               </div>
 
@@ -169,16 +177,13 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <input
-                    {...register("productionYear", { required: true })}
+                    {...register("productionYear")}
                     type="number"
                     name="productionYear"
                     id="productionYear"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage
-                    error={errors?.productionYear}
-                    message="Production year is Required"
-                  />
+                  <ErrorMessage error={errors?.productionYear} message={errors?.productionYear?.message}/>
                 </div>
               </div>
 
@@ -191,7 +196,7 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <input
-                    {...register("shipmentTimeInDays", { required: true })}
+                    {...register("shipmentTimeInDays")}
                     placeholder="Enter value in this format '0-1'"
                     type="text"
                     name="shipmentTimeInDays"
@@ -199,8 +204,7 @@ export default function AddProduct() {
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage
-                    error={errors?.shipmentTimeInDays}
-                    message="Shipment time is Required"
+                    error={errors?.shipmentTimeInDays} message={errors?.shipmentTimeInDays?.message}
                   />
                 </div>
               </div>
@@ -215,15 +219,14 @@ export default function AddProduct() {
                 <div className="mt-2">
                   <input
                     placeholder="Enter value in this format '0-1'"
-                    {...register("processingTimeInDays", { required: true })}
+                    {...register("processingTimeInDays")}
                     type="text"
                     name="processingTimeInDays"
                     id="processingTimeInDays"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   <ErrorMessage
-                    error={errors?.processingTimeInDays}
-                    message="Processing time is Required"
+                    error={errors?.processingTimeInDays} message={errors?.processingTimeInDays?.message}
                   />
                 </div>
               </div>
@@ -237,17 +240,14 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <input
-                    {...register("shippingPrice", { required: true })}
+                    {...register("shippingPrice")}
                     step="0.01"
                     type="number"
                     name="shippingPrice"
                     id="shippingPrice"
                     className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <ErrorMessage
-                    error={errors?.shippingPrice}
-                    message="Shipping price is Required"
-                  />
+                  <ErrorMessage error={errors?.shippingPrice} message={errors?.shippingPrice?.message}/>
                 </div>
               </div>
 
@@ -260,7 +260,7 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-2">
                   <Controller
-                    rules={{ required: true }}
+                    // rules={{ required: true }}
                     control={control}
                     name={"type"}
                     render={({ field: { onChange, value } }) => {
@@ -287,10 +287,7 @@ export default function AddProduct() {
                       ));
                     }}
                   />
-                  <ErrorMessage
-                    error={!watch(`type`) && errors?.type}
-                    message="Type is Required"
-                  />
+                  <ErrorMessage error={!watch(`type`) && errors?.type} message={errors?.type?.message} />
                 </div>
               </div>
               <div className=" flex gap-5 items-center">
@@ -319,7 +316,7 @@ export default function AddProduct() {
                   </label>
                   <div className="mt-2">
                     <input
-                      {...register("customizableComment", { required: true })}
+                      {...register("customizableComment")}
                       type="text"
                       name="customizableComment"
                       id="customizableComment"
@@ -329,7 +326,7 @@ export default function AddProduct() {
                       error={
                         watch(`customizable`) && errors?.customizableComment
                       }
-                      message="Customizable Comment is Required"
+                      message={errors?.customizableComment?.message}
                     />
                   </div>
                 </div>
@@ -354,7 +351,7 @@ export default function AddProduct() {
                 {fieldsProductTags.map((item, index) => (
                   <li key={item.id} className="relative">
                     <input
-                      {...register(`productTags[${index}]`, { required: true })}
+                      {...register(`productTags[${index}]`)}
                       className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
                     <button
@@ -362,7 +359,6 @@ export default function AddProduct() {
                       onClick={() => removeProductTags(index)}
                       className="-translate-y-1/2 absolute right-0 translate-x-1/2 top-0"
                     >
-                      {/* <TrashIcon className="h-5 w-6 text-red-600" /> */}
                       <XCircleIcon className="h-6 w-6 text-red-600" />
                     </button>
                   </li>

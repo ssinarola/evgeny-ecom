@@ -14,10 +14,8 @@ const Variants = ({
   watch,
   control,
   errors,
-  isEditProduct
+  isEditProduct,
 }) => {
-  const watchVariants = watch("variants");
-
   return (
     <div className="">
       <div className="flex gap-1">
@@ -53,47 +51,60 @@ const Variants = ({
               Variant - {variantIndex + 1}
             </p>
             {/* Section start - Variants input fields */}
-            <div className="grid grid-cols-3">
-            {/* <div> */}
+            <div className="grid grid-cols-3 gap-4">
+            <div>
                 <input
                     placeholder="Enter Variant Title"
-                    {...register(`variants.${variantIndex}.title`, { required: true })}
-                    // className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    {...register(`variants.${variantIndex}.title`)}
+                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  {/* <ErrorMessage error={errors?.maker} message="Variant Title is Required"/> */}
-              {/* </div> */}
-             
-              <input
-                placeholder="Enter Variant Description"
-                {...register(`variants.${variantIndex}.description`)}
-                className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-              <input
-                placeholder="Enter Variant GlobalPrice"
-                type="number"
-                step="0.01"
-                {...register(`variants.${variantIndex}.globalPrice`,{ required: true })}
-                className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-              <input
-                placeholder="Enter Variant domesticPrice"
-                type="number"
-                step="0.01"
-                {...register(`variants.${variantIndex}.domesticPrice`, { required: true })}
-                className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
+                  {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.title} message={errors?.variants[variantIndex]?.title?.message}/>}
+              </div>
+             <div>
+                <input
+                  placeholder="Enter Variant Description"
+                  {...register(`variants.${variantIndex}.description`)}
+                  className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.description} message={errors?.variants[variantIndex]?.description?.message}/>}
+             </div>
+             <div>
+                <input
+                  placeholder="Enter Variant GlobalPrice"
+                  type="number"
+                  step="0.01"
+                  {...register(`variants.${variantIndex}.globalPrice`)}
+                  className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.globalPrice} message={errors?.variants[variantIndex]?.globalPrice?.message}/>}
+             </div>
+             <div>
+                <input
+                  placeholder="Enter Variant domesticPrice"
+                  type="number"
+                  step="0.01"
+                  {...register(`variants.${variantIndex}.domesticPrice`)}
+                  className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.domesticPrice} message={errors?.variants[variantIndex]?.domesticPrice?.message}/>}
+             </div>
+             <div>
               <input
                 placeholder="Enter Variant Quantity"
                 type="number"
-                {...register(`variants.${variantIndex}.quantity`, { required: true })}
-                className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                {...register(`variants.${variantIndex}.quantity`)}
+                className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
-              <input
-                placeholder="Enter Variant SKU"
-                {...register(`variants.${variantIndex}.sku`, { required: true })}
-                className="m-1 w-25 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
+              {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.quantity} message={errors?.variants[variantIndex]?.quantity?.message}/>}
+             </div>
+             <div>
+                <input
+                  placeholder="Enter Variant SKU"
+                  {...register(`variants.${variantIndex}.sku`)}
+                  className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                {errors?.variants && <ErrorMessage error={errors?.variants[variantIndex]?.sku} message={errors?.variants[variantIndex]?.sku?.message}/>}
+             </div>
             </div>
             {/* Section end - Variants input field */}
             {/* Add attribute section start*/}

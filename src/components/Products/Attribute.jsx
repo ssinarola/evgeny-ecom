@@ -8,19 +8,21 @@ import {
 } from "../../utils/endpoints";
 import axios from "../../config/axios";
 import { ENUM_TYPE, LINK_TYPE, NUMERIC_TYPE, STRING_TYPE } from "../../utils/constant";
+import ErrorMessage from "../ErrorMessage";
 
 export default function Attribute({setValue, variantIndex, control, register, errors, attributeTypes ,watch, setAttributeTypes, isEditProduct}) {
+  
   // Append fields for attributes
   const { fields: fieldsAttributes, append: appendAttributes, remove: removeAttributes} = useFieldArray({
     control,
     name: `variants[${variantIndex}].attributes`,
   });
+
   useEffect(() => {
     !attributeTypes.length && fetchAllAttributeType();
   },[attributeTypes]);
 
-  const inputAsPerAttributeType = useCallback(
-    (variantIndex, attributeIndex) =>
+  const inputAsPerAttributeType = useCallback((variantIndex, attributeIndex) =>
       new Map([
         [
           LINK_TYPE,
@@ -29,12 +31,15 @@ export default function Attribute({setValue, variantIndex, control, register, er
             control={control}
             name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeValue`}
             render={({ field: { onChange, value } }) => {                            
-                return <input
+                return <div>
+                <input
                 placeholder="Enter..."
                 defaultValue={value}
                 onChange={(event) => onChange(event.target.value)}
-                className="rounded-md border-0 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />}
+                className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+              {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> }
+            </div>}
             }
           />
         ],
@@ -45,12 +50,15 @@ export default function Attribute({setValue, variantIndex, control, register, er
           control={control}
           name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeValue`}
           render={({ field: { onChange, value } }) => (
-            <input
-              placeholder="Enter..."
-              defaultValue={value}
-              onChange={(event) => onChange(event.target.value)}
-              className="rounded-md border-0 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            />
+            <div>
+              <input
+                placeholder="Enter..."
+                defaultValue={value}
+                onChange={(event) => onChange(event.target.value)}
+                className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+              {errors?.variants && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> }
+            </div>
           )}
         />
         ],
@@ -63,25 +71,31 @@ export default function Attribute({setValue, variantIndex, control, register, er
             name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeValue`}
             render={({ field: { onChange, value, name} }) => {
               return (
+                <div>
                   <input
                     name={name}
                     value={value}
-                    className="rounded-md border-0 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    className="w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     type="number"
                     placeholder="Enter..."
                     onChange={onChange}
                   />
+                  {errors?.variants && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValue?.message} /> }
+                </div>
               );
             }}
           />
            <Controller
             rules={{ required: true }}
             control={control}
-            name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeUnitId`}
-            render={({ field: { onChange, value } }) => {                                          
+            name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeUnit`}
+            render={({ field: { onChange, value } }) => {                                                                      
               return (
+                <div>
                   <Dropdown
-                    onMenuOpen={isEditProduct && !watch(`variants[${variantIndex}].attributes[${attributeIndex}].units`) ? async () => {                      
+                    onMenuOpen={isEditProduct && !watch(`variants[${variantIndex}].attributes[${attributeIndex}].units`) ? async () => {      
+                      console.info('attributeType.typeId =>',watch(`variants[${variantIndex}]`))
+                                      
                         const response = await axios.get(`${GET_ALL_ATTRIBUTE_BY_TYPE_URL}/${watch(`variants[${variantIndex}].attributes[${attributeIndex}].attributeType.typeId`)}`);                       
                         const attributeObject  = response?.data?.data
                         .filter((attribute) => attribute.attributeId === watch(`variants[${variantIndex}].attributes[${attributeIndex}].attributeId`))
@@ -102,21 +116,25 @@ export default function Attribute({setValue, variantIndex, control, register, er
                         }
                         );
                     } : () =>{}}
-                    defaultValue={
-                      isEditProduct
-                        ? {
-                            label: watch(
-                              `variants[${variantIndex}].attributes[${attributeIndex}].attributeUnit.attributeUnitName`
-                            ),
-                            value: watch(
-                              `variants[${variantIndex}].attributes[${attributeIndex}].attributeUnit.attributeUnitId`
-                            ),
-                          }
-                        : {
-                            label: value?.attributeUnitName,
-                            value: value?.attributeUnitId,
-                          }
-                    }
+                    defaultValue={{
+                      label: value?.attributeUnitName,
+                      value: value?.attributeUnitId,
+                    }}
+                    // defaultValue={
+                    //   isEditProduct
+                    //     ? {
+                    //         label: watch(
+                    //           `variants[${variantIndex}].attributes[${attributeIndex}].attributeUnit.attributeUnitName`
+                    //         ),
+                    //         value: watch(
+                    //           `variants[${variantIndex}].attributes[${attributeIndex}].attributeUnit.attributeUnitId`
+                    //         ),
+                    //       }
+                    //     : {
+                    //         label: value?.attributeUnitName,
+                    //         value: value?.attributeUnitId,
+                    //       }
+                    // }
                     options={watch(
                       `variants[${variantIndex}].attributes[${attributeIndex}].units`
                     )?.map((unit) => {
@@ -127,7 +145,10 @@ export default function Attribute({setValue, variantIndex, control, register, er
                       };
                     })}
                     onChange={onChange}
+                    // onChange={(selected) => onChange(selected.attributeUnitId)}
                   />
+                  {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeUnitId} message={errors.variants[variantIndex].attributes[attributeIndex]?.attributeUnitId?.message} /> }
+                </div>
                 );
               }}
             />
@@ -137,16 +158,17 @@ export default function Attribute({setValue, variantIndex, control, register, er
           ENUM_TYPE,
           <Controller
             control={control}
-            name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeValueIds`}
+            name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeValues`}
             render={({ field: { onChange, value } }) => {
-              const defaultValue = isEditProduct ? watch(`variants[${variantIndex}].attributes[${attributeIndex}].attributeValues`).
-              map(item => {
+              const defaultValue =  watch(`variants[${variantIndex}].attributes[${attributeIndex}].multiValueSupported`) ?value?.map(item => {
                 return {
                 ...item,
                 label: item.attributeValue,
                 value: item.attributeValueId,
-              }}): value;              
+              }})   :    { label: item.attributeValue,
+                value: item.attributeValueId}      
               return (
+                <div>
                 <Dropdown
                   isMulti={watch(`variants[${variantIndex}].attributes[${attributeIndex}].multiValueSupported`)}
                   onMenuOpen={isEditProduct && !watch(`variants[${variantIndex}].attributes[${attributeIndex}].predefinedValues`)
@@ -204,20 +226,22 @@ export default function Attribute({setValue, variantIndex, control, register, er
                     );
                   }}
                 />
+                {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeValueIds} message={errors.variants[variantIndex].attributes[attributeIndex]?.attributeValueIds?.message} /> }
+                </div>
               );
             }}
           />,
         ],
-      ]),
-    [watch({})]
+      ])
+      ,
+    [watch({}), isEditProduct]
   );
   
   const fetchAllAttributeType = async () => {
     try {
       // Get All AttributeType
       const response = await axios.get(GET_ALL_ATTRIBUTE_TYPES_URL);
-      setAttributeTypes(() =>
-        response?.data?.data.map((item) => {
+      setAttributeTypes(() => response?.data?.data.map((item) => {
           return { ...item, label: item.typeName, value: item.typeId };
         })
       );
@@ -230,7 +254,7 @@ export default function Attribute({setValue, variantIndex, control, register, er
         // Fetch Attributes as per selected attributeType
         const response = await axios.get(`${GET_ALL_ATTRIBUTE_BY_TYPE_URL}/${selectedAttributeType.typeId}`);
         
-        onChange(selectedAttributeType.typeName);
+        onChange(selectedAttributeType);
         setValue(`variants[${variantIndex}].attributes[${attributeIndex}].attributeValuesAsPerType`, 
           response?.data?.data.map((item) => {
             return {
@@ -268,23 +292,19 @@ export default function Attribute({setValue, variantIndex, control, register, er
           >
             <div className="grid grid-cols-4 gap-2">
                <Controller
-                rules={{ required: true }}
+                rules={{ required :"AttrybuteType is required"}}
                 disabled={isEditProduct && !!fieldsAttributes[attributeIndex].productAttributeId}
                 control={control}
-                name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeTypeName`}
-                render={({ field: { onChange, value, disabled} }) => {                                        
-                  return (                    
+                name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeType`}
+                render={({ field: { onChange, value, disabled}}) => {                                                                                                                                                                      
+                  return (
+                  <div>
                     <Dropdown
                       isDisabled={disabled}
                       placeholder="Select Attribute Type"
                       options={attributeTypes}
-                      // value={{ label: value, value: value }}
-                      // defaultInputValue={value}
-                      defaultValue={isEditProduct
-                          ? { label: watch(`variants[${variantIndex}].attributes[${attributeIndex}].attributeType.typeName`), value: watch(`variants[${variantIndex}].attributes[${attributeIndex}].attributeType.type`) }
-                          : { label: value, value: value }
-                      }
-                      onChange={(selected) =>
+                      defaultValue={{label: value?.typeName, value: value?.typeId}}
+                      onChange={(selected) =>{
                         getAttributesAsPerAttributeType(
                           selected,
                           variantIndex,
@@ -292,7 +312,10 @@ export default function Attribute({setValue, variantIndex, control, register, er
                           onChange
                         )
                       }
+                      }
                     />
+                     {/* {errors?.variants && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeType} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeType?.message} /> } */}
+                    </div>                   
                   );
                 }}
               />
@@ -301,17 +324,17 @@ export default function Attribute({setValue, variantIndex, control, register, er
                 disabled={isEditProduct && !!fieldsAttributes[attributeIndex].productAttributeId}
                 control={control}
                 name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeName`}
-                render={({ field: { onChange, value, disabled } }) => {
+                render={({ field: { onChange, value, disabled } }) => {                  
                   return (
+                    <div>
                     <Dropdown
                       isDisabled={disabled}
                       placeholder="Select Attribute"
-                      // defaultInputValue={value}
                       defaultValue={{ label: value, value: value }}
                       options={watch(
                         `variants[${variantIndex}].attributes[${attributeIndex}].attributeValuesAsPerType`
                       )}
-                      onChange={(selectedItem) => {
+                      onChange={(selectedItem) => {                        
                         setValue(`variants[${variantIndex}].attributes[${attributeIndex}].attributeId`, selectedItem.attributeId);
                         setValue(`variants[${variantIndex}].attributes[${attributeIndex}].attributeValueType`,
                           selectedItem.attributeValueType
@@ -328,6 +351,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
                         );
                       }}
                     />
+                     {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeName} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeName?.message} /> }
+                    </div>
                   );
                 }}
               />
