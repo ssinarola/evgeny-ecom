@@ -22,8 +22,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
     !attributeTypes.length && fetchAllAttributeType();
   },[attributeTypes]);
 
-  const inputAsPerAttributeType = useCallback((variantIndex, attributeIndex) =>
-      new Map([
+  const inputAsPerAttributeType = useCallback((variantIndex, attributeIndex, item) =>{
+    return new Map([
         [
           LINK_TYPE,
           <Controller
@@ -93,19 +93,18 @@ export default function Attribute({setValue, variantIndex, control, register, er
               return (
                 <div>
                   <Dropdown
-                    onMenuOpen={isEditProduct && !watch(`variants[${variantIndex}].attributes[${attributeIndex}].units`) ? async () => {      
-                      console.info('attributeType.typeId =>',watch(`variants[${variantIndex}]`))
-                                      
-                        const response = await axios.get(`${GET_ALL_ATTRIBUTE_BY_TYPE_URL}/${watch(`variants[${variantIndex}].attributes[${attributeIndex}].attributeType.typeId`)}`);                       
+                    onMenuOpen={isEditProduct && !watch(`variants[${variantIndex}].attributes[${attributeIndex}].units`) ? async () => {                            
+                        const response = await axios.get(`${GET_ALL_ATTRIBUTE_BY_TYPE_URL}/${item?.attributeType?.typeId}`);                       
                         const attributeObject  = response?.data?.data
-                        .filter((attribute) => attribute.attributeId === watch(`variants[${variantIndex}].attributes[${attributeIndex}].attributeId`))
+                        .filter((attribute) => attribute.attributeId === item?.attributeId)
                         .map((item) => {
                           return {
                             ...item,
-                            label: item.attributeName,
-                            value: item.attributeTypeId,
+                            label: item.attributeUnitName,
+                            value: item.attributeUnitId,
                           };
-                        })                        
+                        });                        
+
                         setValue(
                           `variants[${variantIndex}].attributes[${attributeIndex}]`,
                          { 
@@ -120,21 +119,6 @@ export default function Attribute({setValue, variantIndex, control, register, er
                       label: value?.attributeUnitName,
                       value: value?.attributeUnitId,
                     }}
-                    // defaultValue={
-                    //   isEditProduct
-                    //     ? {
-                    //         label: watch(
-                    //           `variants[${variantIndex}].attributes[${attributeIndex}].attributeUnit.attributeUnitName`
-                    //         ),
-                    //         value: watch(
-                    //           `variants[${variantIndex}].attributes[${attributeIndex}].attributeUnit.attributeUnitId`
-                    //         ),
-                    //       }
-                    //     : {
-                    //         label: value?.attributeUnitName,
-                    //         value: value?.attributeUnitId,
-                    //       }
-                    // }
                     options={watch(
                       `variants[${variantIndex}].attributes[${attributeIndex}].units`
                     )?.map((unit) => {
@@ -145,7 +129,6 @@ export default function Attribute({setValue, variantIndex, control, register, er
                       };
                     })}
                     onChange={onChange}
-                    // onChange={(selected) => onChange(selected.attributeUnitId)}
                   />
                   {errors?.variants && !value && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeUnitId} message={errors.variants[variantIndex].attributes[attributeIndex]?.attributeUnitId?.message} /> }
                 </div>
@@ -174,23 +157,16 @@ export default function Attribute({setValue, variantIndex, control, register, er
                   onMenuOpen={isEditProduct && !watch(`variants[${variantIndex}].attributes[${attributeIndex}].predefinedValues`)
                       ? async () => {
                           const response = await axios.get(
-                            `${GET_ALL_ATTRIBUTE_BY_TYPE_URL}/${watch(
-                              `variants[${variantIndex}].attributes[${attributeIndex}].attributeType.typeId`
-                            )}`
+                            `${GET_ALL_ATTRIBUTE_BY_TYPE_URL}/${item?.attributeType?.typeId}`
                           );
                           const attributeObject = response?.data?.data
                             .filter(
-                              (attribute) =>
-                                attribute.attributeId ===
-                                watch(
-                                  `variants[${variantIndex}].attributes[${attributeIndex}].attributeId`
-                                )
-                            )
+                              (attribute) => attribute.attributeId === item?.attributeId)
                             .map((item) => {
                               return {
                                 ...item,
-                                label: item.attributeName,
-                                value: item.attributeTypeId,
+                                label: item.attributeValue,
+                                value: item.attributeValueId,
                               };
                             });
                           setValue(
@@ -232,9 +208,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
             }}
           />,
         ],
-      ])
-      ,
-    [watch({}), isEditProduct]
+      ])},
+    [watch({}), isEditProduct, errors]
   );
   
   const fetchAllAttributeType = async () => {
@@ -249,12 +224,11 @@ export default function Attribute({setValue, variantIndex, control, register, er
       console.error("error =>", error);
     }
   };
-  const getAttributesAsPerAttributeType = async (selectedAttributeType, variantIndex, attributeIndex, onChange) => {
+  const getAttributesAsPerAttributeType = async (selectedAttributeType, variantIndex, attributeIndex) => {
     try {      
         // Fetch Attributes as per selected attributeType
         const response = await axios.get(`${GET_ALL_ATTRIBUTE_BY_TYPE_URL}/${selectedAttributeType.typeId}`);
         
-        onChange(selectedAttributeType);
         setValue(`variants[${variantIndex}].attributes[${attributeIndex}].attributeValuesAsPerType`, 
           response?.data?.data.map((item) => {
             return {
@@ -305,14 +279,12 @@ export default function Attribute({setValue, variantIndex, control, register, er
                       options={attributeTypes}
                       defaultValue={{label: value?.typeName, value: value?.typeId}}
                       onChange={(selected) =>{
+                        onChange(selected);
                         getAttributesAsPerAttributeType(
                           selected,
                           variantIndex,
                           attributeIndex,
-                          onChange
-                        )
-                      }
-                      }
+                        )}}
                     />
                      {/* {errors?.variants && <ErrorMessage error={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeType} message={errors.variants[variantIndex]?.attributes[attributeIndex]?.attributeType?.message} /> } */}
                     </div>                   
@@ -356,7 +328,7 @@ export default function Attribute({setValue, variantIndex, control, register, er
                   );
                 }}
               />
-              {inputAsPerAttributeType(variantIndex, attributeIndex).get(
+              {inputAsPerAttributeType(variantIndex, attributeIndex, item).get(
                 watch(`variants[${variantIndex}].attributes[${attributeIndex}].attributeValueType`))}
             </div>
             <button

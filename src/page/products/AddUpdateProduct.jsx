@@ -17,7 +17,6 @@ import { productValidationSchema } from "../../components/Products/validation";
 export default function AddProduct() {
   const { pathname } = useLocation();
   const { productId } = useParams();
-  const [selectedProductDetail, setSelectedProductDetail] = useState({});
   const [attributeTypes, setAttributeTypes] = useState([]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -25,24 +24,18 @@ export default function AddProduct() {
 
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
   
-  const { register, handleSubmit, watch, control, formState: { dirtyFields, errors }, setValue, reset} = useForm({
-    resolver: yupResolver(productValidationSchema) 
-  });
+  const { register, handleSubmit, watch, control, formState: { dirtyFields, errors }, setValue, reset} = useForm();
 
-  useEffect(() => {
-    reset(selectedProductDetail);
-  },[selectedProductDetail]);
-  
   const fetchProductById = async () => {    
     const productDetail = await getProductById({ productId });    
-    setSelectedProductDetail(productDetail?.data);
+    reset(productDetail?.data);
   };  
   useEffect(() => {
     if(isEditProduct){
       // API call to Get product detail by ID and set form value with product detail
       fetchProductById();
     } else {
-      setSelectedProductDetail({})
+      reset({})
     }
   },[isEditProduct, productId]);
 
@@ -63,7 +56,7 @@ export default function AddProduct() {
   }
 
 const createProductPayload = (data) =>{
-  const payload = { ...data }; // Start with a copy of the original data
+  const payload = { ...data }; 
 
   // Process variants:
   payload.variants = data.variants.map((variant) => {
@@ -79,7 +72,7 @@ const createProductPayload = (data) =>{
         attributePayload.attributeValue = attribute.attributeValue;
         attributePayload.attributeUnitId = attribute.attributeUnit.attributeUnitId;
       } else if (attribute.attributeValueType === "ENUM") {
-        attributePayload.attributeValuesIds = attribute.attributeValues.map(
+        attributePayload.attributeValueIds = attribute.attributeValues.map(
           (value) => value.attributeValueId
         );
       } else {
@@ -96,21 +89,17 @@ const createProductPayload = (data) =>{
   return payload;
 }
 
-  const onSubmit = async (data) => {
-    console.info('data submit =>', data)
-    const productObject = createProductPayload(data)
+const onSubmit = async (data) => {
+  const productObject = createProductPayload(data);
 
-    if(isEditProduct){
-      // console.info('filterData =>',filterData(productObject))
-
-      // console.info('updatedObject =>', updatedObject)
-      // dispatch(updateProduct({productId, body: updatedObject}));  
-
-      // navigate("/")
-      return;
+  if(isEditProduct){  
+        dispatch(updateProduct({productId, body: {...requiredKeyForCreateProduct, ...productObject}}));  
+        navigate("/")
+        return;
     }else{
       // API call for product creation
       dispatch(addProducts({body: {...requiredKeyForCreateProduct, ...productObject}, resetForm}));
+      
     }
   };
 
