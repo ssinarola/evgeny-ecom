@@ -25,11 +25,11 @@ export default function Products() {
       order: "DESC",
       sortBy: "CREATED_DATE",
       filter: JSON.stringify({
-        title: "variants",
-        sku: "sku",
-        status: "DRAFT",
-        productType: "DIGITAL",
-        tag: "fsdds",
+        // title: "variants",
+        // sku: "sku",
+        // status: "DRAFT",
+        // productType: "DIGITAL",
+        // tag: "fsdds",
       }),
     };
     dispatch(fetchProducts(params));
