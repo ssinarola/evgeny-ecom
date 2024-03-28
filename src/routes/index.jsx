@@ -2,7 +2,7 @@ import React from 'react'
 import { Route, Routes } from 'react-router-dom';
 
 const Layout = React.lazy(() => import("../layout"));
-const Products = React.lazy(() => import("../page/products/Products"));
+const Products = React.lazy(() => import("../page/products/index"));
 const AddUpdateProduct = React.lazy(() => import("../page/products/AddUpdateProduct"));
 const ProductDetail = React.lazy(() => import("../page/products/ProductDetail"));
 const PageNotFound = React.lazy(() => import("../page/PageNotFound"));

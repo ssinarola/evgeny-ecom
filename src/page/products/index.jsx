@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useProducts } from "../../store/selectorHooks";
 import { useDispatch } from "react-redux";
 import { fetchProducts } from "../../store/slice/productSlice";
-import ProductCard from "../../components/ProductCard";
+import ProductCard from "../../components/Products/ProductCard";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination";
 import Loader from "../../components/Loader";
