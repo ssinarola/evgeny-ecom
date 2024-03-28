@@ -115,10 +115,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
                         }
                         );
                     } : () =>{}}
-                    defaultValue={{
-                      label: value?.attributeUnitName,
-                      value: value?.attributeUnitId,
-                    }}
+                    placeholder="Select Attribute Unit"
+                    defaultValue={value ? { label: value?.attributeUnitName, value: value?.attributeUnitId,}: "Select Attribute Unit"}
                     options={watch(
                       `variants[${variantIndex}].attributes[${attributeIndex}].units`
                     )?.map((unit) => {
@@ -190,7 +188,8 @@ export default function Attribute({setValue, variantIndex, control, register, er
                       value: value.attributeValueId,
                     };
                   })}
-                  defaultValue={defaultValue}
+                  defaultValue={value ? defaultValue: "Select Attribute Values"}
+                  placeholder="Select Attribute Values"
                   onChange={(selectedValue) => {
                     // modify value and add format as we need
                     onChange(
@@ -270,14 +269,14 @@ export default function Attribute({setValue, variantIndex, control, register, er
                 disabled={isEditProduct && !!fieldsAttributes[attributeIndex].productAttributeId}
                 control={control}
                 name={`variants[${variantIndex}].attributes[${attributeIndex}].attributeType`}
-                render={({ field: { onChange, value, disabled}}) => {                                                                                                                                                                      
+                render={({ field: { onChange, value, disabled}}) => {                                                                                                                                                                                        
                   return (
                   <div>
                     <Dropdown
                       isDisabled={disabled}
                       placeholder="Select Attribute Type"
                       options={attributeTypes}
-                      defaultValue={{label: value?.typeName, value: value?.typeId}}
+                      defaultValue={value ? {label: value?.typeName, value: value?.typeId} : "Select Attribute Type" }
                       onChange={(selected) =>{
                         onChange(selected);
                         getAttributesAsPerAttributeType(
@@ -302,7 +301,7 @@ export default function Attribute({setValue, variantIndex, control, register, er
                     <Dropdown
                       isDisabled={disabled}
                       placeholder="Select Attribute"
-                      defaultValue={{ label: value, value: value }}
+                      defaultValue={value ? { label: value, value: value } : "Select Attribute"}
                       options={watch(
                         `variants[${variantIndex}].attributes[${attributeIndex}].attributeValuesAsPerType`
                       )}

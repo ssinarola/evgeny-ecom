@@ -24,7 +24,9 @@ export default function AddProduct() {
 
   const isEditProduct = useMemo(() => !!(productId && pathname.includes("edit-product")) ,[pathname, productId]);
   
-  const { register, handleSubmit, watch, control, formState: { dirtyFields, errors }, setValue, reset} = useForm();
+  const { register, handleSubmit, watch, control, formState: { dirtyFields, errors }, setValue, reset} = useForm({
+    resolver: yupResolver(productValidationSchema) 
+  });
 
   const fetchProductById = async () => {    
     const productDetail = await getProductById({ productId });    
